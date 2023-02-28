@@ -1,0 +1,12 @@
+rootProject.name = 'ipgs'
+
+include(":ipgs_ai")
+def ipgs_ai = project(":ipgs_ai")
+ipgs_ai.projectDir = new File("ipgs-ai")
+ipgs_ai.buildFileName = new File("build.gradle")
+
+
+include(":ipgs_web")
+def ipgs_web = project(":ipgs_web")
+ipgs_web.projectDir = new File("ipgs-web")
+ipgs_web.buildFileName = new File("build.gradle")
