@@ -9,7 +9,16 @@ dependencies {
 
     implementation 'org.deeplearning4j:deeplearning4j-core:1.0.0-M2.1'
     implementation 'org.nd4j:nd4j-cuda-9.2:1.0.0-beta6'
-    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'org.deeplearning4j:deeplearning4j-cuda-9.2:1.0.0-beta6'
+
+    implementation 'org.apache.logging.log4j:log4j-api:2.19.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.19.0'
+
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    testCompileOnly 'org.projectlombok:lombok:1.18.20'
+
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
