@@ -13,6 +13,7 @@ import org.nd4j.linalg.api.buffer.DataType;
 import org.nd4j.linalg.api.ops.impl.layers.convolution.config.Conv2DConfig;
 import org.nd4j.linalg.api.ops.impl.layers.convolution.config.Pooling2DConfig;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.weightinit.impl.XavierInitScheme;
 
@@ -24,6 +25,10 @@ import java.util.List;
 public class MNISTCNNTest {
 
     public static SameDiff makeMNISTNet() {
+        System.setProperty("org.bytedeco.javacpp.maxPhysicalBytes", "3G");
+        Nd4j.getMemoryManager().setAutoGcWindow(10000);
+        Nd4j.getMemoryManager().togglePeriodicGc(false);
+
         SameDiff sd = SameDiff.create();
 
         //Properties for MNIST dataset:
