@@ -120,5 +120,7 @@ public class MNISTCNNTest {
         List<Double> acc = hist.trainingEval(Metric.ACCURACY);
 
         System.out.println("Accuracy: " + acc);
+
+
     }
 }
