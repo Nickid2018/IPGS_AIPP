@@ -12,7 +12,6 @@ import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
 
-@SuppressWarnings("duplicateCodes")
 public class U2Net {
 
     public static ComputationGraph init(int width, int height, int depth) {
@@ -76,48 +75,52 @@ public class U2Net {
                         .nIn(64)
                         .nOut(1)
                         .padding(1, 1).build(), "stage1d")
-                .addLayer("stage1_over", new ActivationLayer.Builder()
-                        .activation(Activation.SIGMOID).build(), "stage1_out")
+//                .addLayer("stage1_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage1_out")
                 .addLayer("stage2_out", new ConvolutionLayer.Builder(3, 3)
                         .nIn(64)
                         .nOut(1)
                         .padding(1, 1).build(), "stage2d")
                 .addLayer("stage2_up", new Upsampling2D.Builder(2).build(), "stage2_out")
-                .addLayer("stage2_over", new ActivationLayer.Builder()
-                        .activation(Activation.SIGMOID).build(), "stage2_up")
+//                .addLayer("stage2_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage2_up")
                 .addLayer("stage3_out", new ConvolutionLayer.Builder(3, 3)
                         .nIn(128)
                         .nOut(1)
                         .padding(1, 1).build(), "stage3d")
                 .addLayer("stage3_up", new Upsampling2D.Builder(4).build(), "stage3_out")
-                .addLayer("stage3_over", new ActivationLayer.Builder()
-                        .activation(Activation.SIGMOID).build(), "stage3_up")
+//                .addLayer("stage3_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage3_up")
                 .addLayer("stage4_out", new ConvolutionLayer.Builder(3, 3)
                         .nIn(256)
                         .nOut(1)
                         .padding(1, 1).build(), "stage4d")
                 .addLayer("stage4_up", new Upsampling2D.Builder(8).build(), "stage4_out")
-                .addLayer("stage4_over", new ActivationLayer.Builder()
-                        .activation(Activation.SIGMOID).build(), "stage4_up")
+//                .addLayer("stage4_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage4_up")
                 .addLayer("stage5_out", new ConvolutionLayer.Builder(3, 3)
                         .nIn(512)
                         .nOut(1)
                         .padding(1, 1).build(), "stage5d")
                 .addLayer("stage5_up", new Upsampling2D.Builder(16).build(), "stage5_out")
-                .addLayer("stage5_over", new ActivationLayer.Builder()
-                        .activation(Activation.SIGMOID).build(), "stage5_up")
+//                .addLayer("stage5_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage5_up")
                 .addLayer("stage6_out", new ConvolutionLayer.Builder(3, 3)
                         .nIn(512)
                         .nOut(1)
                         .padding(1, 1).build(), "stage5d")
                 .addLayer("stage6_up", new Upsampling2D.Builder(32).build(), "stage6_out")
-                .addLayer("stage6_over", new ActivationLayer.Builder()
-                        .activation(Activation.SIGMOID).build(), "stage6_up")
-                .addVertex("merge", new MergeVertex(), "stage1_over", "stage2_over", "stage3_over",
-                        "stage4_over", "stage5_over", "stage6_over")
+//                .addLayer("stage6_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage6_up")
+                .addVertex("merge", new MergeVertex(), "stage1_out", "stage2_up", "stage3_up",
+                        "stage4_up", "stage5_up", "stage6_up")
+                .addLayer("output_conv", new ConvolutionLayer.Builder(1, 1)
+                        .nIn(6)
+                        .nOut(1).build(), "merge")
                 .addLayer("output", new ActivationLayer.Builder()
-                        .activation(Activation.SIGMOID).build(), "merge")
-                .setOutputs("output");
+                        .activation(Activation.SIGMOID).build(), "output_conv")
+                .setOutputs("output")
+        ;
 
         ComputationGraphConfiguration conf = graph.build();
         ComputationGraph model = new ComputationGraph(conf);
