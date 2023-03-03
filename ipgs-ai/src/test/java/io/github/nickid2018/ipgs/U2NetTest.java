@@ -9,6 +9,7 @@ import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.model.stats.StatsListener;
 import org.deeplearning4j.ui.model.storage.FileStatsStorage;
 import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
+import org.deeplearning4j.zoo.model.UNet;
 import org.junit.jupiter.api.Test;
 import org.nd4j.linalg.dataset.api.preprocessor.ImageMultiPreProcessingScaler;
 import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
@@ -20,7 +21,7 @@ import java.io.File;
 public class U2NetTest {
 
     public static final File MODEL_FILE = new File("model.zip");
-    public static final File TRAIN_FILE = new File("train-mini-mini.zip");
+    public static final File TRAIN_FILE = new File("train-mini-mini-mini.zip");
     public static final Logger LOGGER = LoggerFactory.getLogger(U2NetTest.class);
 
     @Test
@@ -33,16 +34,30 @@ public class U2NetTest {
             graph = ComputationGraph.load(MODEL_FILE, true);
         } else {
             LOGGER.info("Model file not found, training...");
-            graph = U2Net.init(512, 512, 3);
+            graph = U2Net.initNETP(256, 256, 3);
 
-            UIServer uiServer = UIServer.getInstance();
             StatsStorage statsStorage = new InMemoryStatsStorage();
-            uiServer.attach(statsStorage);
+
+            new Thread(() -> {
+                UIServer uiServer = UIServer.getInstance();
+                uiServer.attach(statsStorage);
+            }).start();
 
             TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 1, 5386);
             graph.setListeners(new StatsListener(statsStorage));
-            graph.fit(iterator, 1);
+            graph.fit(iterator, 100);
             graph.save(MODEL_FILE, true);
         }
+
+//        ComputationGraph graph = UNet.builder().inputShape(new int[]{3, 256, 256}).build().init();
+//
+//        UIServer uiServer = UIServer.getInstance();
+//        StatsStorage statsStorage = new InMemoryStatsStorage();
+//        uiServer.attach(statsStorage);
+//
+//        TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 1, 5386);
+//        graph.setListeners(new StatsListener(statsStorage));
+//        graph.fit(iterator, 1);
+//        graph.save(MODEL_FILE, true);
     }
 }

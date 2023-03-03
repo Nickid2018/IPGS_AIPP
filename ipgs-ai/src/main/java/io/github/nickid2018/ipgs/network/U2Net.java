@@ -130,6 +130,121 @@ public class U2Net {
         return model;
     }
 
+    public static ComputationGraph initNETP(int width, int height, int depth) {
+        ComputationGraphConfiguration.GraphBuilder graph = new NeuralNetConfiguration.Builder()
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+                .updater(Updater.ADADELTA)
+                .weightInit(WeightInit.RELU)
+                .l2(5e-5)
+                .trainingWorkspaceMode(WorkspaceMode.ENABLED)
+                .inferenceWorkspaceMode(WorkspaceMode.ENABLED)
+                .graphBuilder();
+
+        graph.addInputs("input").setInputTypes(InputType.convolutional(height, width, depth));
+
+        RSU7(graph, "stage1", "input", 3, 16, 64);
+        graph.addLayer("stage1_pool", new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+                .kernelSize(2, 2)
+                .stride(2, 2)
+                .build(), "stage1");
+        RSU6(graph, "stage2", "stage1_pool", 64, 16, 64);
+        graph.addLayer("stage2_pool", new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+                .kernelSize(2, 2)
+                .stride(2, 2)
+                .build(), "stage2");
+        RSU5(graph, "stage3", "stage2_pool", 64, 16, 64);
+        graph.addLayer("stage3_pool", new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+                .kernelSize(2, 2)
+                .stride(2, 2)
+                .build(), "stage3");
+        RSU4(graph, "stage4", "stage3_pool", 64, 16, 64);
+        graph.addLayer("stage4_pool", new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+                .kernelSize(2, 2)
+                .stride(2, 2)
+                .build(), "stage4");
+        RSU4F(graph, "stage5", "stage4_pool", 64, 16, 64);
+        graph.addLayer("stage5_pool", new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
+                .kernelSize(2, 2)
+                .stride(2, 2)
+                .build(), "stage5");
+        RSU4F(graph, "stage6", "stage5_pool", 64, 16, 64);
+        // Decoder ---------------------------
+        graph.addLayer("stage6d_up", new Upsampling2D.Builder(2).build(), "stage6");
+        graph.addVertex("stage5_merge", new MergeVertex(), "stage6d_up", "stage5");
+        RSU4F(graph, "stage5d", "stage5_merge", 128, 16, 64);
+        graph.addLayer("stage5d_up", new Upsampling2D.Builder(2).build(), "stage5d");
+        graph.addVertex("stage4_merge", new MergeVertex(), "stage5d_up", "stage4");
+        RSU4(graph, "stage4d", "stage4_merge", 128, 16, 64);
+        graph.addLayer("stage4d_up", new Upsampling2D.Builder(2).build(), "stage4d");
+        graph.addVertex("stage3_merge", new MergeVertex(), "stage4d_up", "stage3");
+        RSU5(graph, "stage3d", "stage3_merge", 128, 16, 64);
+        graph.addLayer("stage3d_up", new Upsampling2D.Builder(2).build(), "stage3d");
+        graph.addVertex("stage2_merge", new MergeVertex(), "stage3d_up", "stage2");
+        RSU6(graph, "stage2d", "stage2_merge", 128, 16, 64);
+        graph.addLayer("stage2d_up", new Upsampling2D.Builder(2).build(), "stage2d");
+        graph.addVertex("stage1_merge", new MergeVertex(), "stage2d_up", "stage1");
+        RSU7(graph, "stage1d", "stage1_merge", 128, 16, 64);
+
+        // Output -----------------------------
+        graph
+                .addLayer("stage1_out", new ConvolutionLayer.Builder(3, 3)
+                        .nIn(64)
+                        .nOut(1)
+                        .padding(1, 1).build(), "stage1d")
+//                .addLayer("stage1_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage1_out")
+                .addLayer("stage2_out", new ConvolutionLayer.Builder(3, 3)
+                        .nIn(64)
+                        .nOut(1)
+                        .padding(1, 1).build(), "stage2d")
+                .addLayer("stage2_up", new Upsampling2D.Builder(2).build(), "stage2_out")
+//                .addLayer("stage2_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage2_up")
+                .addLayer("stage3_out", new ConvolutionLayer.Builder(3, 3)
+                        .nIn(64)
+                        .nOut(1)
+                        .padding(1, 1).build(), "stage3d")
+                .addLayer("stage3_up", new Upsampling2D.Builder(4).build(), "stage3_out")
+//                .addLayer("stage3_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage3_up")
+                .addLayer("stage4_out", new ConvolutionLayer.Builder(3, 3)
+                        .nIn(64)
+                        .nOut(1)
+                        .padding(1, 1).build(), "stage4d")
+                .addLayer("stage4_up", new Upsampling2D.Builder(8).build(), "stage4_out")
+//                .addLayer("stage4_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage4_up")
+                .addLayer("stage5_out", new ConvolutionLayer.Builder(3, 3)
+                        .nIn(64)
+                        .nOut(1)
+                        .padding(1, 1).build(), "stage5d")
+                .addLayer("stage5_up", new Upsampling2D.Builder(16).build(), "stage5_out")
+//                .addLayer("stage5_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage5_up")
+                .addLayer("stage6_out", new ConvolutionLayer.Builder(3, 3)
+                        .nIn(64)
+                        .nOut(1)
+                        .padding(1, 1).build(), "stage5d")
+                .addLayer("stage6_up", new Upsampling2D.Builder(16).build(), "stage6_out")
+//                .addLayer("stage6_over", new ActivationLayer.Builder()
+//                        .activation(Activation.SIGMOID).build(), "stage6_up")
+                .addVertex("merge", new MergeVertex(), "stage1_out", "stage2_up", "stage3_up",
+                        "stage4_up", "stage5_up", "stage6_up")
+                .addLayer("output_conv", new ConvolutionLayer.Builder(1, 1)
+                        .nIn(6)
+                        .nOut(1).build(), "merge")
+                .addLayer("output", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
+                        .activation(Activation.SIGMOID).build(), "output_conv")
+                .setOutputs("output")
+        ;
+
+        ComputationGraphConfiguration conf = graph.build();
+        ComputationGraph model = new ComputationGraph(conf);
+        model.init();
+
+        return model;
+    }
+
     public static void ReBNConv(ComputationGraphConfiguration.GraphBuilder graph,
                                 String name, String input, int inChannel, int outChannel, int dilation) {
         graph.addLayer(name + "_conv", new ConvolutionLayer.Builder(3, 3)

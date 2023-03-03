@@ -21,7 +21,7 @@ import java.util.Arrays;
 @Slf4j
 public class TrainDataFetcher extends BaseDataFetcher {
 
-    public static final int IMAGE_SIZE = 512;
+    public static final int IMAGE_SIZE = 256;
 
     private float[][][][] images = new float[1][3][IMAGE_SIZE][IMAGE_SIZE];
     private float[][][][] labels = new float[1][1][IMAGE_SIZE][IMAGE_SIZE];
@@ -34,8 +34,8 @@ public class TrainDataFetcher extends BaseDataFetcher {
     public TrainDataFetcher(File file, int totalExamples) throws IOException {
         zipFile = new ZipFile(file);
         this.totalExamples = totalExamples;
-        numOutcomes = 2048 * 2048;
-        inputColumns = 2048 * 2048 * 3;
+        numOutcomes = IMAGE_SIZE * IMAGE_SIZE;
+        inputColumns = IMAGE_SIZE * IMAGE_SIZE * 3;
     }
 
     public void setPredictBuffer(int predictBuffer) {

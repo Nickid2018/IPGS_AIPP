@@ -38,8 +38,8 @@ public class GenerateNormalizedSetTest {
 
     @Test
     public void scale() throws IOException {
-        String from = "train-mini.zip";
-        String to = "train-mini-mini.zip";
+        String from = "train-mini-mini.zip";
+        String to = "train-mini-mini-mini.zip";
         ZipFile zipFile = new ZipFile(from);
         ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(to));
         int size = (int) zipFile.stream().count();
@@ -51,9 +51,9 @@ public class GenerateNormalizedSetTest {
             if (entry.isDirectory())
                 continue;
             BufferedImage image = ImageIO.read(zipFile.getInputStream(entry));
-            BufferedImage scaled = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+            BufferedImage scaled = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = scaled.createGraphics();
-            g.drawImage(image, 0, 0, 512, 512, null);
+            g.drawImage(image, 0, 0, 256, 256, null);
             zipOutputStream.putNextEntry(new ZipEntry(entry.getName()));
             ImageIO.write(scaled, "png", zipOutputStream);
             zipOutputStream.closeEntry();

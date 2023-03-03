@@ -1,8 +1,14 @@
 package io.github.nickid2018.ipgs;
 
+import org.deeplearning4j.core.storage.StatsStorage;
 import org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator;
+import org.deeplearning4j.ui.api.UIServer;
+import org.deeplearning4j.ui.model.stats.StatsListener;
+import org.deeplearning4j.ui.model.storage.FileStatsStorage;
+import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
 import org.junit.jupiter.api.Test;
 import org.nd4j.autodiff.listeners.impl.ScoreListener;
+import org.nd4j.autodiff.listeners.impl.UIListener;
 import org.nd4j.autodiff.listeners.records.History;
 import org.nd4j.autodiff.samediff.SDVariable;
 import org.nd4j.autodiff.samediff.SameDiff;
@@ -17,6 +23,7 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.weightinit.impl.XavierInitScheme;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -106,8 +113,13 @@ public class MNISTCNNTest {
 
         sd.setTrainingConfig(config);
 
+        UIListener uiListener = UIListener.builder(new File("save/ui-samediff.bin"))
+                .plotLosses(1)
+                .updateRatios(10)
+                .build();
+
         // Adding a listener to the SameDiff instance is necessary because of a beta5 bug, and is not necessary in snapshots
-        sd.addListeners(new ScoreListener(20));
+        sd.addListeners(new ScoreListener(20), uiListener);
 
         int batchSize = 32;
         DataSetIterator trainData = new MnistDataSetIterator(batchSize, true, 12345);
@@ -122,5 +134,7 @@ public class MNISTCNNTest {
         System.out.println("Accuracy: " + acc);
 
 
+        UIServer uiServer = UIServer.getInstance();
+        uiServer.attach(new FileStatsStorage(new File("save/ui-samediff.bin")));
     }
 }
