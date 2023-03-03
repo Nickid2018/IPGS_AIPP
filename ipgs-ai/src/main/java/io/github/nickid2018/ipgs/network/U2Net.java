@@ -11,6 +11,7 @@ import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 public class U2Net {
 
@@ -109,7 +110,7 @@ public class U2Net {
                         .nIn(512)
                         .nOut(1)
                         .padding(1, 1).build(), "stage5d")
-                .addLayer("stage6_up", new Upsampling2D.Builder(32).build(), "stage6_out")
+                .addLayer("stage6_up", new Upsampling2D.Builder(16).build(), "stage6_out")
 //                .addLayer("stage6_over", new ActivationLayer.Builder()
 //                        .activation(Activation.SIGMOID).build(), "stage6_up")
                 .addVertex("merge", new MergeVertex(), "stage1_out", "stage2_up", "stage3_up",
@@ -117,7 +118,7 @@ public class U2Net {
                 .addLayer("output_conv", new ConvolutionLayer.Builder(1, 1)
                         .nIn(6)
                         .nOut(1).build(), "merge")
-                .addLayer("output", new ActivationLayer.Builder()
+                .addLayer("output", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID).build(), "output_conv")
                 .setOutputs("output")
         ;

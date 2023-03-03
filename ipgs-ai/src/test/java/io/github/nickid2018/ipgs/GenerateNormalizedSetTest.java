@@ -15,10 +15,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.zip.DataFormatException;
-import java.util.zip.Inflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.*;
 
 public class GenerateNormalizedSetTest {
 
@@ -40,9 +37,34 @@ public class GenerateNormalizedSetTest {
     }
 
     @Test
+    public void scale() throws IOException {
+        String from = "train-mini.zip";
+        String to = "train-mini-mini.zip";
+        ZipFile zipFile = new ZipFile(from);
+        ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(to));
+        int size = (int) zipFile.stream().count();
+        int counter = 0;
+        for (ZipEntry entry : zipFile.stream().toList()) {
+            counter++;
+            System.out.println("\33[0;33m Progress: " + counter + "/" + size + " \33[0m");
+            System.out.flush();
+            if (entry.isDirectory())
+                continue;
+            BufferedImage image = ImageIO.read(zipFile.getInputStream(entry));
+            BufferedImage scaled = new BufferedImage(512, 512, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = scaled.createGraphics();
+            g.drawImage(image, 0, 0, 512, 512, null);
+            zipOutputStream.putNextEntry(new ZipEntry(entry.getName()));
+            ImageIO.write(scaled, "png", zipOutputStream);
+            zipOutputStream.closeEntry();
+        }
+        zipOutputStream.close();
+    }
+
+    @Test
     public void tar() throws IOException {
-        String from = "D:\\Download\\Supervisely Person Dataset.tar";
-        String to = "D:\\Download\\Supervisely Person Dataset.zip";
+        String from = "Supervisely Person Dataset.tar";
+        String to = "train.zip";
 
         ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(to));
         int progress = 0;
