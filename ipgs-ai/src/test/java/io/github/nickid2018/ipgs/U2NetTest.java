@@ -3,16 +3,16 @@ package io.github.nickid2018.ipgs;
 import io.github.nickid2018.ipgs.dataset.TrainDataSetIterator;
 import io.github.nickid2018.ipgs.network.U2Net;
 import lombok.SneakyThrows;
+import org.datavec.api.records.reader.RecordReader;
+import org.datavec.api.split.InputStreamInputSplit;
+import org.datavec.api.split.StreamInputSplit;
+import org.datavec.image.recordreader.ImageRecordReader;
 import org.deeplearning4j.core.storage.StatsStorage;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.model.stats.StatsListener;
-import org.deeplearning4j.ui.model.storage.FileStatsStorage;
 import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
-import org.deeplearning4j.zoo.model.UNet;
 import org.junit.jupiter.api.Test;
-import org.nd4j.linalg.dataset.api.preprocessor.ImageMultiPreProcessingScaler;
-import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,23 +27,22 @@ public class U2NetTest {
     @Test
     @SneakyThrows
     public void test() {
-        System.setProperty("org.bytedeco.javacpp.maxPhysicalBytes", "5G");
+        System.setProperty("org.bytedeco.javacpp.maxPhysicalBytes", "8G");
         ComputationGraph graph;
         if (MODEL_FILE.exists()) {
             LOGGER.info("Found model file, loading...");
             graph = ComputationGraph.load(MODEL_FILE, true);
         } else {
             LOGGER.info("Model file not found, training...");
+
             graph = U2Net.initNETP(256, 256, 3);
 
             StatsStorage statsStorage = new InMemoryStatsStorage();
 
-            new Thread(() -> {
-                UIServer uiServer = UIServer.getInstance();
-                uiServer.attach(statsStorage);
-            }).start();
+            UIServer uiServer = UIServer.getInstance();
+            uiServer.attach(statsStorage);
 
-            TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 1, 5386);
+            TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 1, 5711);
             graph.setListeners(new StatsListener(statsStorage));
             graph.fit(iterator, 100);
             graph.save(MODEL_FILE, true);

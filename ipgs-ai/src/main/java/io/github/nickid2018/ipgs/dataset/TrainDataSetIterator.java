@@ -14,4 +14,9 @@ public class TrainDataSetIterator extends BaseDatasetIterator {
     public TrainDataFetcher getFetcher() {
         return (TrainDataFetcher) fetcher;
     }
+
+    @Override
+    public boolean asyncSupported() {
+        return false;
+    }
 }

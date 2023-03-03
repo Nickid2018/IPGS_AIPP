@@ -1,7 +1,6 @@
 package io.github.nickid2018.ipgs.dataset;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -49,6 +48,9 @@ public class TrainDataFetcher extends BaseDataFetcher {
 
     @Override
     public void fetch(int numExamples) {
+        System.out.println("\33[0;33mNow cursor is " + cursor + "\33[0m");
+        System.out.flush();
+
         int actualExamples = Math.min(numExamples, totalExamples - cursor);
 
         if (predictBuffer < actualExamples) {
@@ -59,8 +61,8 @@ public class TrainDataFetcher extends BaseDataFetcher {
 
         for (int i = 0; i < actualExamples; i++, cursor++) {
             try {
-                readImage(cursor + i, i);
-                readLabel(cursor + i, i);
+                readImage(cursor, i);
+                readLabel(cursor, i);
             } catch (IOException e) {
                 log.error("Error while reading image", e);
                 images[i] = new float[3][IMAGE_SIZE][IMAGE_SIZE];
@@ -85,10 +87,9 @@ public class TrainDataFetcher extends BaseDataFetcher {
         curr = new DataSet(features, labelsArray);
     }
 
-    private float[][][] readImage(int index, int bufferIndex) throws IOException {
+    private void readImage(int index, int bufferIndex) throws IOException {
         ZipArchiveEntry entry = zipFile.getEntry("image/" + index + ".png");
         BufferedImage image = ImageIO.read(zipFile.getInputStream(entry));
-        float[][][] bytes = new float[3][image.getHeight()][image.getWidth()];
         for (int i = 0; i < image.getWidth(); i++) {
             for (int j = 0; j < image.getHeight(); j++) {
                 int rgb = image.getRGB(i, j);
@@ -97,7 +98,6 @@ public class TrainDataFetcher extends BaseDataFetcher {
                 images[bufferIndex][2][j][i] = (byte) (rgb & 0xFF);
             }
         }
-        return bytes;
     }
 
     private void readLabel(int index, int bufferIndex) throws IOException {

@@ -37,36 +37,11 @@ public class GenerateNormalizedSetTest {
     }
 
     @Test
-    public void scale() throws IOException {
-        String from = "train-mini-mini.zip";
-        String to = "train-mini-mini-mini.zip";
-        ZipFile zipFile = new ZipFile(from);
-        ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(to));
-        int size = (int) zipFile.stream().count();
-        int counter = 0;
-        for (ZipEntry entry : zipFile.stream().toList()) {
-            counter++;
-            System.out.println("\33[0;33m Progress: " + counter + "/" + size + " \33[0m");
-            System.out.flush();
-            if (entry.isDirectory())
-                continue;
-            BufferedImage image = ImageIO.read(zipFile.getInputStream(entry));
-            BufferedImage scaled = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = scaled.createGraphics();
-            g.drawImage(image, 0, 0, 256, 256, null);
-            zipOutputStream.putNextEntry(new ZipEntry(entry.getName()));
-            ImageIO.write(scaled, "png", zipOutputStream);
-            zipOutputStream.closeEntry();
-        }
-        zipOutputStream.close();
-    }
-
-    @Test
     public void tar() throws IOException {
         String from = "Supervisely Person Dataset.tar";
         String to = "train.zip";
 
-        ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(to));
+        ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(to)));
         int progress = 0;
         try (TarFile tarFile = new TarFile(new File(from))) {
             Set<TarArchiveEntry> entries = new HashSet<>();
@@ -86,12 +61,24 @@ public class GenerateNormalizedSetTest {
                 JsonObject object = new JsonParser().parse(IOUtils.toString(
                         tarFile.getInputStream(entry), StandardCharsets.UTF_8)).getAsJsonObject();
                 JsonObject size = object.get("size").getAsJsonObject();
-                if (size.get("width").getAsInt() > 4096 || size.get("height").getAsInt() > 4096) {
+
+                int width = size.get("width").getAsInt();
+                int height = size.get("height").getAsInt();
+                if (width > 4096 || height > 4096) {
                     progress++;
                     continue;
                 }
 
-                boolean needScale = size.get("width").getAsInt() > 2048 || size.get("height").getAsInt() > 2048;
+                int scale = 1;
+                if (width > 2048 || height > 2048) {
+                    scale = 16;
+                } else if (width > 1024 || height > 1024) {
+                    scale = 8;
+                } else if (width > 512 || height > 512) {
+                    scale = 4;
+                } else if (width > 256 || height > 256) {
+                    scale = 2;
+                }
 
                 BufferedImage image1 = ImageIO.read(tarFile.getInputStream(image));
                 if (image1 == null) {
@@ -99,15 +86,11 @@ public class GenerateNormalizedSetTest {
                     progress++;
                     continue;
                 }
-                BufferedImage deal = new BufferedImage(2048, 2048, BufferedImage.TYPE_INT_RGB);
-                if (needScale)
-                    deal.getGraphics().drawImage(image1.getScaledInstance(
-                                    image1.getWidth() / 2, image1.getHeight() / 2, BufferedImage.SCALE_AREA_AVERAGING),
-                            0, 0, null);
-                else
-                    deal.getGraphics().drawImage(image1, 0, 0, null);
 
-                BufferedImage type = new BufferedImage(needScale ? 4096 : 2048, needScale ? 4096 : 2048, BufferedImage.TYPE_BYTE_BINARY);
+                BufferedImage deal = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB);
+                deal.getGraphics().drawImage(image1, 0, 0, width / scale, height / scale, null);
+
+                BufferedImage type = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
                 JsonArray objects = object.get("objects").getAsJsonArray();
                 for (JsonElement element : objects) {
                     String geometryType = element.getAsJsonObject().get("geometryType").getAsString();
@@ -155,11 +138,8 @@ public class GenerateNormalizedSetTest {
                     }
                 }
 
-                if (needScale) {
-                    Image scaledInstance = type.getScaledInstance(2048, 2048, BufferedImage.SCALE_AREA_AVERAGING);
-                    type = new BufferedImage(2048, 2048, BufferedImage.TYPE_BYTE_BINARY);
-                    type.getGraphics().drawImage(scaledInstance, 0, 0, null);
-                }
+                BufferedImage ctype = new BufferedImage(256, 256, BufferedImage.TYPE_BYTE_BINARY);
+                ctype.getGraphics().drawImage(type, 0, 0, width / scale, height / scale, null);
 
                 ZipEntry saveEntry = new ZipEntry("image/" + progress + ".png");
                 zipOutputStream.putNextEntry(saveEntry);
@@ -168,12 +148,10 @@ public class GenerateNormalizedSetTest {
 
                 saveEntry = new ZipEntry("mask/" + progress + ".png");
                 zipOutputStream.putNextEntry(saveEntry);
-                ImageIO.write(type, "png", zipOutputStream);
+                ImageIO.write(ctype, "png", zipOutputStream);
                 zipOutputStream.closeEntry();
 
                 progress++;
-                System.out.print("\33[1A");
-                System.out.flush();
                 System.out.println("\33[0;33m Progress: " + progress + "/" + entries.size() + " \33[0m");
                 System.out.flush();
             }
