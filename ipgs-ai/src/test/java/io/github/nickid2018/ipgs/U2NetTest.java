@@ -18,7 +18,7 @@ import java.io.File;
 public class U2NetTest {
 
     public static final File MODEL_FILE = new File("model.zip");
-    public static final File TRAIN_FILE = new File("train-mini-mini-mini.zip");
+    public static final File TRAIN_FILE = new File("train.zip");
 
     @Test
     @SneakyThrows
