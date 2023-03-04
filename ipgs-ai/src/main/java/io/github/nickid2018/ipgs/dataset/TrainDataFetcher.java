@@ -62,10 +62,9 @@ public class TrainDataFetcher extends BaseDataFetcher {
             try {
                 readImage(cursor, i);
                 readLabel(cursor, i);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error("Error while reading image", e);
-                images[i] = new float[3][IMAGE_SIZE][IMAGE_SIZE];
-                labels[i] = new float[1][IMAGE_SIZE][IMAGE_SIZE];
+                i--;
             }
         }
 
