@@ -48,8 +48,7 @@ public class TrainDataFetcher extends BaseDataFetcher {
 
     @Override
     public void fetch(int numExamples) {
-        System.out.println("\33[0;33mNow cursor is " + cursor + "\33[0m");
-        System.out.flush();
+        log.info("\33[0;33mNow cursor is {}\33[0m", cursor);
 
         int actualExamples = Math.min(numExamples, totalExamples - cursor);
 
@@ -109,5 +108,11 @@ public class TrainDataFetcher extends BaseDataFetcher {
                 labels[bufferIndex][0][j][i] = (byte) ((rgb >> 16) & 0xFF);
             }
         }
+    }
+
+    @Override
+    public void reset() {
+        curr = null;
+        cursor = 0;
     }
 }
