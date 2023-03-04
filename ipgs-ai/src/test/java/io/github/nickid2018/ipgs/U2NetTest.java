@@ -35,13 +35,19 @@ public class U2NetTest {
 
             graph = U2Net.initNETP(256, 256, 3);
 
-            StatsStorage statsStorage = new InMemoryStatsStorage();
+            StatsStorage statsStorage = null;
 
-            UIServer uiServer = UIServer.getInstance();
-            uiServer.attach(statsStorage);
+            try {
+                UIServer uiServer = UIServer.getInstance();
+                statsStorage = new InMemoryStatsStorage();
+                uiServer.attach(statsStorage);
+            } catch (Exception e) {
+                log.error("Failed to start UI server, maybe on Colab?", e);
+            }
 
             TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 1, 5711);
-            graph.setListeners(new StatsListener(statsStorage));
+            if (statsStorage != null)
+                graph.setListeners(new StatsListener(statsStorage));
             graph.fit(iterator, 100);
             graph.save(MODEL_FILE, true);
         }
