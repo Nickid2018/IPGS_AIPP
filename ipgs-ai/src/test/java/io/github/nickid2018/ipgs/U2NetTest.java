@@ -42,13 +42,15 @@ public class U2NetTest {
                 statsStorage = new InMemoryStatsStorage();
                 uiServer.attach(statsStorage);
             } catch (Exception e) {
-                log.error("Failed to start UI server, maybe on Colab?", e);
+                log.error("Failed to start UI server, maybe on Colab?");
             }
 
-            TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 1, 5711);
+            TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 1, 5386);
             if (statsStorage != null)
                 graph.setListeners(new StatsListener(statsStorage));
-            graph.fit(iterator, 100);
+            graph.fit(iterator, 1);
+
+            log.info("Training finished, saving model...");
             graph.save(MODEL_FILE, true);
         }
 

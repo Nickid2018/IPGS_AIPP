@@ -63,7 +63,7 @@ public class TrainDataFetcher extends BaseDataFetcher {
                 readImage(cursor, i);
                 readLabel(cursor, i);
             } catch (Exception e) {
-                log.error("Error while reading image", e);
+                log.error("skip image {}", cursor);
                 i--;
             }
         }
