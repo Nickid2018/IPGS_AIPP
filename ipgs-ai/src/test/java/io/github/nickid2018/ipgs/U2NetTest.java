@@ -45,7 +45,7 @@ public class U2NetTest {
                 log.error("Failed to start UI server, maybe on Colab?");
             }
 
-            TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 1, 5386);
+            TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 2, 5386);
             if (statsStorage != null)
                 graph.setListeners(new StatsListener(statsStorage));
             graph.fit(iterator, 1);
