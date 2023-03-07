@@ -9,6 +9,7 @@ import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.model.stats.StatsListener;
 import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
+import org.deeplearning4j.zoo.model.UNet;
 import org.junit.jupiter.api.Test;
 import org.nd4j.linalg.factory.Nd4j;
 
@@ -36,29 +37,29 @@ public class U2NetTest {
             log.info("Found model file, loading...");
             graph = ComputationGraph.load(MODEL_FILE, true);
         } else {
-            log.info("Model file not found, training...");
+            log.info("Model file not found, creating...");
+//            graph = U2Net.initNETP(256, 256, 3);
+            graph = UNet.builder().build().init();
+        }
 
-            graph = U2Net.initNETP(256, 256, 3);
+        StatsStorage statsStorage = null;
 
-            StatsStorage statsStorage = null;
+        if (!onColab) {
+            UIServer uiServer = UIServer.getInstance();
+            statsStorage = new InMemoryStatsStorage();
+            uiServer.attach(statsStorage);
+        } else
+            log.info("Stop to start UI server.");
 
-            if (!onColab) {
-                UIServer uiServer = UIServer.getInstance();
-                statsStorage = new InMemoryStatsStorage();
-                uiServer.attach(statsStorage);
-            } else
-                log.info("Stop to start UI server.");
+        TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 1, 5386 / 4);
 
-            TrainDataSetIterator iterator = new TrainDataSetIterator(TRAIN_FILE, 1, 5386 / 4);
+        while (iterator.getFetcher().hasMore()) {
+            if (statsStorage != null)
+                graph.setListeners(new StatsListener(statsStorage));
+            graph.fit(iterator, 1);
 
-            while (iterator.hasNext()) {
-                if (statsStorage != null)
-                    graph.setListeners(new StatsListener(statsStorage));
-                graph.fit(iterator, 1);
-
-                log.info("Training finished, saving model...");
-                graph.save(MODEL_FILE, true);
-            }
+            log.info("Training finished, saving model...");
+            graph.save(MODEL_FILE, true);
         }
 
 //        ComputationGraph graph = UNet.builder().inputShape(new int[]{3, 256, 256}).build().init();
