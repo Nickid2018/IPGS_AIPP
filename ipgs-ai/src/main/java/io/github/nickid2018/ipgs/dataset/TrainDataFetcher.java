@@ -30,6 +30,8 @@ public class TrainDataFetcher extends BaseDataFetcher {
 
     private final ZipFile zipFile;
 
+    private int nowCursor = 0;
+
     public TrainDataFetcher(File file, int totalExamples) throws IOException {
         zipFile = new ZipFile(file);
         this.totalExamples = totalExamples;
@@ -58,10 +60,11 @@ public class TrainDataFetcher extends BaseDataFetcher {
             predictBuffer = actualExamples;
         }
 
-        for (int i = 0; i < actualExamples; i++, cursor++) {
+        for (int i = 0; i < actualExamples; i++, nowCursor++) {
             try {
-                readImage(cursor, i);
-                readLabel(cursor, i);
+                readImage(nowCursor, i);
+                readLabel(nowCursor, i);
+                cursor++;
             } catch (Exception e) {
                 log.error("skip image {}", cursor);
                 i--;
@@ -110,8 +113,21 @@ public class TrainDataFetcher extends BaseDataFetcher {
     }
 
     @Override
+    public boolean hasMore() {
+        return cursor < 5386;
+    }
+
+    @Override
     public void reset() {
         curr = null;
         cursor = 0;
+    }
+
+    public int getNowCursor() {
+        return nowCursor;
+    }
+
+    public void setNowCursor(int nowCursor) {
+        this.nowCursor = nowCursor;
     }
 }
