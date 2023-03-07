@@ -94,9 +94,9 @@ public class TrainDataFetcher extends BaseDataFetcher {
         for (int i = 0; i < image.getWidth(); i++) {
             for (int j = 0; j < image.getHeight(); j++) {
                 int rgb = image.getRGB(i, j);
-                images[bufferIndex][0][j][i] = (byte) ((rgb >> 16) & 0xFF);
-                images[bufferIndex][1][j][i] = (byte) ((rgb >> 8) & 0xFF);
-                images[bufferIndex][2][j][i] = (byte) (rgb & 0xFF);
+                images[bufferIndex][0][j][i] = (rgb >> 16) & 0xFF;
+                images[bufferIndex][1][j][i] = (rgb >> 8) & 0xFF;
+                images[bufferIndex][2][j][i] = rgb & 0xFF;
             }
         }
     }
@@ -107,7 +107,7 @@ public class TrainDataFetcher extends BaseDataFetcher {
         for (int i = 0; i < image.getWidth(); i++) {
             for (int j = 0; j < image.getHeight(); j++) {
                 int rgb = image.getRGB(i, j);
-                labels[bufferIndex][0][j][i] = (byte) ((rgb >> 16) & 0xFF);
+                labels[bufferIndex][0][j][i] = (rgb >> 16) & 0xFF;
             }
         }
     }

@@ -32,5 +32,6 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    jvmArgs += "-Xmx4g"
     workingDir = file("run")
 }

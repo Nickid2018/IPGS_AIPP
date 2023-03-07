@@ -26,9 +26,9 @@ public class U2NetOverTest {
         for (int i = 0; i < image.getWidth(); i++) {
             for (int j = 0; j < image.getHeight(); j++) {
                 int rgb = image.getRGB(i, j);
-                imageArray[0][0][j][i] = (byte) ((rgb >> 16) & 0xFF);
-                imageArray[0][1][j][i] = (byte) ((rgb >> 8) & 0xFF);
-                imageArray[0][2][j][i] = (byte) (rgb & 0xFF);
+                imageArray[0][0][j][i] = (rgb >> 16) & 0xFF;
+                imageArray[0][1][j][i] = (rgb >> 8) & 0xFF;
+                imageArray[0][2][j][i] = rgb & 0xFF;
             }
         }
         return Nd4j.create(imageArray).divi(255);
@@ -38,7 +38,7 @@ public class U2NetOverTest {
     @SneakyThrows
     public void test() {
         System.setProperty("org.bytedeco.javacpp.maxBytes", "8G");
-        Nd4j.getMemoryManager().setAutoGcWindow(5000);
+
         ComputationGraph graph;
         if (MODEL_FILE.exists()) {
             log.info("Found model file, loading...");
@@ -47,7 +47,7 @@ public class U2NetOverTest {
             log.error("Model file not found");
             return;
         }
-
+        Nd4j.getMemoryManager().setAutoGcWindow(5000);
 
         INDArray[] result = graph.output(loadImage("test.png"));
         INDArray array = result[0];
