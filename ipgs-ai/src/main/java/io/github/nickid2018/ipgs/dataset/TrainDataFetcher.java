@@ -12,6 +12,7 @@ import org.nd4j.linalg.dataset.api.iterator.fetcher.BaseDataFetcher;
 import org.nd4j.linalg.factory.Nd4j;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -83,7 +84,6 @@ public class TrainDataFetcher extends BaseDataFetcher {
         }
 
         features = features.divi(255);
-        labelsArray = labelsArray.gt(30).castTo(DataType.FLOAT);
 
         curr = new DataSet(features, labelsArray);
     }
@@ -107,7 +107,10 @@ public class TrainDataFetcher extends BaseDataFetcher {
         for (int i = 0; i < image.getWidth(); i++) {
             for (int j = 0; j < image.getHeight(); j++) {
                 int rgb = image.getRGB(i, j);
-                labels[bufferIndex][0][j][i] = (rgb >> 16) & 0xFF;
+                if (((rgb >> 16) & 0xFF) == 0)
+                    labels[bufferIndex][0][j][i] = 0;
+                else
+                    labels[bufferIndex][0][j][i] = 1;
             }
         }
     }

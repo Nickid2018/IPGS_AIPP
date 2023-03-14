@@ -42,7 +42,7 @@ public class GenerateNormalizedSetTest {
         String to = "train.zip";
 
         ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(to)));
-        int progress = 0;
+        int progress = 0, index = 0;
         try (TarFile tarFile = new TarFile(new File(from))) {
             Set<TarArchiveEntry> entries = new HashSet<>();
             Map<String, TarArchiveEntry> others = new HashMap<>();
@@ -69,17 +69,6 @@ public class GenerateNormalizedSetTest {
                     continue;
                 }
 
-                int scale = 1;
-                if (width > 2048 || height > 2048) {
-                    scale = 16;
-                } else if (width > 1024 || height > 1024) {
-                    scale = 8;
-                } else if (width > 512 || height > 512) {
-                    scale = 4;
-                } else if (width > 256 || height > 256) {
-                    scale = 2;
-                }
-
                 BufferedImage image1 = ImageIO.read(tarFile.getInputStream(image));
                 if (image1 == null) {
                     System.out.println("Image can't be read: " + imagePath);
@@ -88,7 +77,7 @@ public class GenerateNormalizedSetTest {
                 }
 
                 BufferedImage deal = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB);
-                deal.getGraphics().drawImage(image1, 0, 0, width / scale, height / scale, null);
+                deal.getGraphics().drawImage(image1, 0, 0, 256, 256, null);
 
                 BufferedImage type = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
                 JsonArray objects = object.get("objects").getAsJsonArray();
@@ -139,18 +128,19 @@ public class GenerateNormalizedSetTest {
                 }
 
                 BufferedImage ctype = new BufferedImage(256, 256, BufferedImage.TYPE_BYTE_BINARY);
-                ctype.getGraphics().drawImage(type, 0, 0, width / scale, height / scale, null);
+                ctype.getGraphics().drawImage(type, 0, 0, 256, 256, null);
 
-                ZipEntry saveEntry = new ZipEntry("image/" + progress + ".png");
+                ZipEntry saveEntry = new ZipEntry("image/" + index + ".png");
                 zipOutputStream.putNextEntry(saveEntry);
                 ImageIO.write(deal, "png", zipOutputStream);
                 zipOutputStream.closeEntry();
 
-                saveEntry = new ZipEntry("mask/" + progress + ".png");
+                saveEntry = new ZipEntry("mask/" + index + ".png");
                 zipOutputStream.putNextEntry(saveEntry);
                 ImageIO.write(ctype, "png", zipOutputStream);
                 zipOutputStream.closeEntry();
 
+                index++;
                 progress++;
                 System.out.println("\33[0;33m Progress: " + progress + "/" + entries.size() + " \33[0m");
                 System.out.flush();
